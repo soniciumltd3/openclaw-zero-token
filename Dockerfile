@@ -23,8 +23,10 @@ COPY patches ./patches
 # Create extensions directories if they don't exist
 RUN mkdir -p extensions src/zero-token/extensions
 
-# Install dependencies without cache mounts
-RUN NODE_OPTIONS=--max-old-space-size=2048 pnpm install --frozen-lockfile --no-optional
+# ============================================================
+# 🔧 গুরুত্বপূর্ণ পরিবর্তন: --ignore-scripts যোগ করা হয়েছে
+# ============================================================
+RUN NODE_OPTIONS=--max-old-space-size=2048 pnpm install --frozen-lockfile --no-optional --ignore-scripts
 
 # Copy the rest of the application
 COPY . .
@@ -41,6 +43,11 @@ RUN for dir in /app/extensions /app/src/zero-token/extensions /app/.agent /app/.
 RUN pnpm canvas:a2ui:bundle || (echo "A2UI bundle stub created" && \
     mkdir -p src/canvas-host/a2ui && \
     echo "/* A2UI bundle stub */" > src/canvas-host/a2ui/a2ui.bundle.js)
+
+# ============================================================
+# 🔧 rolldown নেটিভ বাইন্ডিং ইস্যু এড়ানোর জন্য পরিবেশ ভেরিয়েবল
+# ============================================================
+ENV ROLLDOWN_SKIP_NATIVE_BINDINGS=1
 
 # Build the application
 RUN pnpm build:docker
